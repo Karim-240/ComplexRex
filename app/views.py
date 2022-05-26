@@ -22,6 +22,7 @@ def dictfetchall(cursor):
     ]
 
 # Create your views here.
+# Prueba de cambios 
 class newQR(APIView):
     @action(detail=True, methods=['POST']) 
     def post(self, request, format=None):
