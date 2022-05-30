@@ -9,10 +9,12 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from dynamic_db_router import in_database
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-
+import cryptocode
 import cv2 as cv
 import webbrowser
 import qrcode
+
+# Clave secreta para encriptar y desencriptar
 
 def dictfetchall(cursor):
     columns = [col[0] for col in cursor.description]
@@ -27,13 +29,18 @@ class newQR(APIView):
     @action(detail=True, methods=['POST']) 
     def post(self, request, format=None):
         try:
+            # print(clave)
+            # print(des)
             nombre = request.data["nombre"]
             casa = request.data["casa"]
             id = request.data["id"]
+            data = id+'_'+casa
+            info = cryptocode.encrypt(data,"cmpx")
+            print (info)
             save_path = "app/static/app/img/QRS/"
             completeName = save_path+casa+'_'+nombre+'.png'
             UserComplex.objects.filter(id = id).update(QR = completeName[11:])
-            img = qrcode.make(casa+'_'+nombre)
+            img = qrcode.make(info)
             img.save(completeName)
             
             return Response({
@@ -170,22 +177,36 @@ def showLectorQR(request):
     #b = webbrowser.open(str(a))
     cap.release()
     cv.destroyAllWindows()
-    if data != "" :
-        for dat in a:
-            ResultQR += dat
+    try:
+
+        if data != "" :
+            for dat in a:
+                ResultQR += dat
+            des = cryptocode.decrypt(ResultQR, "cmpx")
+            usuarios = UserComplex.objects.all()
+            temp = des.split("_")
+            id=int(temp[0])-1
+            qrData = "Acceso : "+usuarios[id].nombre+" "+usuarios[id].apellidos+" del domicilio "+usuarios[id].residencia
+            data = {
+                'usuarios' : usuarios,
+                'QR': qrData,
+                }
+            
+            return render(request, 'app/LQR.html', data)
+        else:
+            usuarios = UserComplex.objects.all()
+            data = {
+                'usuarios' : usuarios,
+                'QR' : "Lectura cancelada",
+                }
+        return render(request, 'app/LQR.html', data)
+    except:
         usuarios = UserComplex.objects.all()
         data = {
             'usuarios' : usuarios,
-            'QR': ResultQR,
+            'QR' : "El código no corresponde a ningún usuario registrado",
             }
         return render(request, 'app/LQR.html', data)
-    else:
-        usuarios = UserComplex.objects.all()
-        data = {
-            'usuarios' : usuarios,
-            'QR' : "Lectura cancelada",
-            }
-    return render(request, 'app/LQR.html', data)
 
     
 

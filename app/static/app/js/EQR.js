@@ -40,6 +40,7 @@ function generarQR() {
         const csrftoken = getCookie('csrftoken')
         nombre = $("#nameQR option:selected").val()
         casa = $("#nameQR option:selected").data("residencia")
+        
         id = $("#nameQR option:selected").attr("id")
         $.ajax({
             type: "POST",

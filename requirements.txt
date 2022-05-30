@@ -4,3 +4,4 @@ qrcode
 django-dynamic-db-router
 djangorestframework
 opencv-python
+cryptocode
